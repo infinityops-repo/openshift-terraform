@@ -26,25 +26,21 @@ variable "ebs_volume_size" {
 variable "ami" {
   description = "AMI a ser usada para as instâncias"
   type        = string
-#  default     = "ami-0583d8c7a9c35822c"
 }
 
 variable "subnet_id" {
   description = "ID da sub-rede onde as instâncias serão lançadas"
   type        = string
-  #default     = "subnet-0123456789abcdef0"
 }
 
 variable "security_group_id" {
   description = "ID do grupo de segurança a ser associado às instâncias"
   type        = string
-  default     = "sg-0123456789abcdef0"
 }
 
 variable "vpc_id" {
   description = "ID da VPC onde o grupo de segurança será criado"
   type        = string
-  default     = "vpc-0123456789abcdef0"
 }
 
 variable "vpc_cidr" {
@@ -65,5 +61,28 @@ variable "private_subnet_cidr" {
 variable "availability_zone" {
   description = "Zona de disponibilidade onde os recursos serão criados"
   type        = string
- #  default     = "us-east-1a"
+}
+
+variable "cluster_name" {
+  description = "Nome do cluster OpenShift"
+  type        = string
+  default     = "openshift-cluster"
+}
+
+variable "environment" {
+  description = "Ambiente (dev, staging, prod)"
+  type        = string
+  default     = "production"
+}
+
+variable "key_name" {
+  description = "Nome do key pair para SSH"
+  type        = string
+  default     = null
+}
+
+variable "domain_name" {
+  description = "Domain name para o cluster"
+  type        = string
+  default     = "example.com"
 } 

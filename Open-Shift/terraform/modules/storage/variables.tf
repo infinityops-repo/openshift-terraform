@@ -16,4 +16,9 @@ variable "availability_zone" {
 variable "worker_node_ids" {
   description = "IDs das instâncias dos nós de trabalho"
   type        = list(string)  # ou string, dependendo de como você deseja usar
+}
+
+variable "cluster_name" {
+  description = "Nome do cluster OpenShift"
+  type        = string
 } 

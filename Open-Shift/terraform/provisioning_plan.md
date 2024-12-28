@@ -7,54 +7,101 @@
 - Define módulos para VPC, EC2, grupos de segurança, armazenamento, monitoramento e IAM.
 
 ### variables.tf:
-- Define as variáveis utilizadas em todo o projeto, como tipo de instância, contagem de nós, AMI, IDs de sub-rede e grupo de segurança, CIDR da VPC e zona de disponibilidade.
+- Define as variáveis utilizadas em todo o projeto:
+  - Variáveis básicas: região, tipo de instância, contagem de nós
+  - Variáveis de rede: CIDR blocks, IDs de sub-rede
+  - Variáveis de cluster: nome do cluster, ambiente, key pair, domain name
+  - Variáveis de configuração: AMI, zona de disponibilidade
 
 ### outputs.tf:
-- Define as saídas do Terraform, como o ID da VPC, IPs dos nós de controle e de trabalho, e ID do grupo de segurança.
+- Define as saídas do Terraform:
+  - IDs de VPC e subnets (públicas e privadas)
+  - IPs dos nós de controle e de trabalho
+  - Endpoint do cluster OpenShift
+  - IDs dos grupos de segurança
+  - URLs de acesso ao cluster
 
 ### tags.tf:
-- Aplica tags a todos os recursos criados para facilitar a organização e o gerenciamento.
+- Aplica tags padronizadas a todos os recursos
+- Implementa tags específicas para gerenciamento de custos e identificação de recursos
 
 ## 2. Módulos
 
 ### modules/vpc/vpc.tf:
-- Configura a VPC e as sub-redes.
-- Cria a VPC com suporte a DNS e define sub-redes públicas e privadas.
+- Configura a VPC com suporte a DNS
+- Implementa subnets públicas e privadas
+- Configuração de alta disponibilidade com múltiplas AZs
+- Inclui Internet Gateway e NAT Gateway
 
 ### modules/security_groups/security_groups.tf:
-- Configura os grupos de segurança para controlar o tráfego de entrada e saída.
-- Permite tráfego HTTP, HTTPS e outras portas necessárias para o OpenShift.
+- Implementa grupos de segurança específicos para OpenShift:
+  - Porta 6443 para API Server
+  - Porta 22623 para Machine Config Server
+  - Portas 80/443 para HTTP/HTTPS
+  - Comunicação entre nós do cluster
+- Regras de segurança baseadas em princípios de menor privilégio
 
 ### modules/ec2/ec2.tf:
-- Configura as instâncias EC2 para o cluster OpenShift.
-- Cria instâncias para o nó de controle e nós de trabalho, aplicando tags e configurando segurança.
+- Configuração aprimorada das instâncias EC2:
+  - Encryption dos volumes root
+  - IAM instance profiles
+  - User data para bootstrap
+  - Key pairs para SSH
+  - Tags específicas para OpenShift
 
 ### modules/storage/storage.tf:
-- Configura o armazenamento persistente para os nós de trabalho.
-- Cria volumes EBS e os anexa às instâncias dos nós de trabalho.
+- Implementa volumes EBS otimizados:
+  - Usa volumes GP3 para melhor performance
+  - Encryption por padrão
+  - Tags para gerenciamento de custos
+  - Integração com cluster OpenShift
 
-### modules/monitoring/variables.tf:
-- Define variáveis específicas para o módulo de monitoramento (placeholder para futuras configurações).
+### modules/monitoring/monitoring.tf:
+- Implementação de monitoramento completo:
+  - CloudWatch Logs
+  - CloudWatch Metrics
+  - AWS Config Rules
+  - AWS CloudTrail
 
-## 3. Arquivos de Configuração
+### modules/iam/iam.tf:
+- Políticas IAM específicas para OpenShift:
+  - Permissões para EC2
+  - Acesso a Load Balancers
+  - Integração com S3
+  - Permissões Route53
+  - Políticas de segurança granulares
 
-### terraform/.terraform/modules/modules.json:
-- Arquivo gerado automaticamente pelo Terraform que contém informações sobre os módulos utilizados no projeto.
+## 3. Melhorias de Segurança
 
-## Resumo dos Componentes
+### Encryption e Segurança:
+- KMS para encryption em repouso
+- Security Groups com regras específicas
+- Network ACLs para controle adicional
+- IAM roles com menor privilégio
 
-### Arquivos Raiz:
-- main.tf
-- variables.tf
-- outputs.tf
-- tags.tf
+### Alta Disponibilidade:
+- Distribuição de nós em múltiplas AZs
+- Load balancers para control plane
+- Auto scaling groups para workers
 
-### Módulos:
-- modules/vpc/vpc.tf
-- modules/security_groups/security_groups.tf
-- modules/ec2/ec2.tf
-- modules/storage/storage.tf
-- modules/monitoring/variables.tf
+### Monitoramento e Backup:
+- CloudWatch para logs e métricas
+- Snapshots automáticos
+- Políticas de backup
+- Estratégia de DR
 
-### Arquivos de Configuração:
-- terraform/.terraform/modules/modules.json
+## 4. Próximos Passos
+
+1. Implementar auto scaling para nós workers
+2. Configurar backup automático
+3. Implementar monitoramento avançado
+4. Configurar DNS com Route53
+5. Implementar políticas de compliance
+
+## 5. Considerações de Manutenção
+
+- Rotação regular de credenciais
+- Atualizações de segurança
+- Monitoramento de custos
+- Backup e recuperação
+- Documentação de procedimentos operacionais
