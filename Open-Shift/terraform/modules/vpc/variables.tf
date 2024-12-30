@@ -1,14 +1,14 @@
 variable "vpc_cidr" {
-  description = "CIDR block for the VPC"
+  description = "CIDR block para a VPC"
   type        = string
 }
 
-variable "public_subnet_cidr" {
-  description = "CIDR block for the public subnet"
+variable "region" {
+  description = "Região AWS onde a infraestrutura será criada"
   type        = string
 }
 
-variable "private_subnet_cidr" {
-  description = "CIDR block for the private subnet"
+variable "cluster_name" {
+  description = "Nome do cluster OpenShift"
   type        = string
 } 

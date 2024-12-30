@@ -4,10 +4,10 @@ provider "aws" {
 
 # Módulo para configuração da VPC
 module "vpc" {
-  source              = "./modules/vpc"
-  vpc_cidr            = var.vpc_cidr
-  public_subnet_cidr  = var.public_subnet_cidr
-  private_subnet_cidr = var.private_subnet_cidr
+  source       = "./modules/vpc"
+  vpc_cidr     = var.vpc_cidr
+  region       = var.region
+  cluster_name = var.cluster_name
 }
 
 # Módulo para configuração das instâncias EC2
@@ -18,42 +18,31 @@ module "ec2" {
   worker_node_count   = var.worker_node_count
   ami                 = data.aws_ami.latest.id
   subnet_id           = module.vpc.private_subnet_id
-  security_group_id   = module.security_groups.allow_http_https
   vpc_id              = module.vpc.vpc_id
+  vpc_cidr            = var.vpc_cidr
   public_subnet_ids   = module.vpc.public_subnet_ids
   cluster_name        = var.cluster_name
   key_name            = var.key_name
   iam_role_name       = module.iam.role_name
+  ebs_volume_size     = var.ebs_volume_size
 }
 
-# Módulo para configuração dos grupos de segurança
-module "security_groups" {
-  source   = "./modules/security_groups"
-  vpc_id   = module.vpc.vpc_id
-  vpc_cidr = var.vpc_cidr
-}
-
-# Módulo para configuração de armazenamento
-module "storage" {
-  source            = "./modules/storage"
-  worker_node_count = var.worker_node_count
-  ebs_volume_size   = var.ebs_volume_size
-  availability_zone = var.availability_zone
-  worker_node_ids   = module.ec2.worker_node_ips
-  cluster_name      = var.cluster_name
-}
-
-# Módulo para configuração de monitoramento
-module "monitoring" {
-  source = "./modules/monitoring"
+# Módulo para configuração do S3
+module "s3" {
+  source       = "./modules/s3"
+  cluster_name = var.cluster_name
+  environment  = var.environment
+  region       = var.region
 }
 
 # Módulo para configuração de IAM roles e policies
 module "iam" {
-  source = "./modules/iam"
+  source       = "./modules/iam"
+  environment  = var.environment
+  cluster_name = var.cluster_name
 }
 
 data "aws_ami" "latest" {
   most_recent = true
-  owners      = ["amazon"] # Ou o ID do proprietário da AMI que você deseja usar
+  owners      = ["amazon"]
 } 

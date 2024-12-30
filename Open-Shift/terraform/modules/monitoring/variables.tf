@@ -1,1 +1,0 @@
-# Este módulo pode não precisar de variáveis específicas, mas se necessário, adicione aqui. 

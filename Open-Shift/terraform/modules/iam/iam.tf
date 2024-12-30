@@ -1,52 +1,52 @@
-resource "aws_iam_role" "openshift_role" {
-  name = "openshift_role"
+locals {
+  common_tags = {
+    Environment = var.environment
+    Project     = "OpenShift"
+    Owner       = "Shift"
+    ManagedBy   = "Terraform"
+  }
+}
+
+# Cluster Role
+resource "aws_iam_role" "openshift_cluster" {
+  name = "${var.cluster_name}-cluster-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-        Effect = "Allow"
-        Sid    = ""
-      },
-    ]
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
+    }]
   })
+
+  tags = local.common_tags
 }
 
-resource "aws_iam_policy" "openshift_policy" {
-  name        = "openshift_policy"
-  description = "Policy for OpenShift EC2 instances"
+# Node Role
+resource "aws_iam_role" "openshift_node" {
+  name = "${var.cluster_name}-node-role"
 
-  policy = jsonencode({
+  assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "ec2:Describe*",
-          "elasticloadbalancing:*",
-          "autoscaling:*",
-          "cloudwatch:*",
-          "logs:*",
-          "iam:PassRole",
-        ]
-        Effect   = "Allow"
-        Resource = "*"
-      },
-    ]
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
+    }]
   })
+
+  tags = local.common_tags
 }
 
-resource "aws_iam_role_policy_attachment" "attach_openshift_policy" {
-  policy_arn = aws_iam_policy.openshift_policy.arn
-  role       = aws_iam_role.openshift_role.name
-}
-
-resource "aws_iam_role_policy" "openshift_node_policy" {
-  name = "openshift_node_policy"
-  role = aws_iam_role.openshift_role.id
+# Cluster Policies
+resource "aws_iam_role_policy" "cluster_policy" {
+  name = "${var.cluster_name}-cluster-policy"
+  role = aws_iam_role.openshift_cluster.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -56,9 +56,35 @@ resource "aws_iam_role_policy" "openshift_node_policy" {
         Action = [
           "ec2:*",
           "elasticloadbalancing:*",
-          "s3:*",
           "route53:*",
+          "route53domains:*",
+          "s3:*",
+          "kms:*",
           "iam:PassRole"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Node Policies
+resource "aws_iam_role_policy" "node_policy" {
+  name = "${var.cluster_name}-node-policy"
+  role = aws_iam_role.openshift_node.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:Describe*",
+          "ec2:AttachVolume",
+          "ec2:DetachVolume",
+          "ec2:CreateTags",
+          "ec2:CreateVolume",
+          "ec2:DeleteVolume"
         ]
         Resource = "*"
       }

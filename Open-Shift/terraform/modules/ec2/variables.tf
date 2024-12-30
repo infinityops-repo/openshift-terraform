@@ -23,11 +23,6 @@ variable "subnet_id" {
   type        = string
 }
 
-variable "security_group_id" {
-  description = "ID do grupo de segurança a ser associado às instâncias"
-  type        = string
-}
-
 variable "vpc_id" {
   description = "ID da VPC"
   type        = string
@@ -50,5 +45,15 @@ variable "iam_role_name" {
 
 variable "key_name" {
   description = "Nome do key pair para SSH"
+  type        = string
+}
+
+variable "ebs_volume_size" {
+  description = "Tamanho dos volumes EBS em GB"
+  type        = number
+}
+
+variable "vpc_cidr" {
+  description = "CIDR block da VPC"
   type        = string
 } 

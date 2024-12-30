@@ -7,12 +7,14 @@ locals {
 }
 
 resource "aws_lb" "control_plane" {
-  name               = "openshift-control-plane-lb"
+  name               = "${var.cluster_name}-cp-lb"
   internal           = false
   load_balancer_type = "network"
   subnets            = var.public_subnet_ids
 
-  tags = local.common_tags
+  tags = merge(local.common_tags, {
+    Name = "${var.cluster_name}-control-plane-lb"
+  })
 }
 
 resource "aws_lb_listener" "api_server" {
@@ -43,27 +45,42 @@ resource "aws_instance" "control_plane" {
   ami           = var.ami
   instance_type = var.instance_type
   subnet_id     = var.subnet_id
-  security_groups = [var.security_group_id]
-  tags = merge(local.common_tags, {
-    Name = "openshift-control-plane-${count.index}"
-  })
-  root_block_device {
-    encrypted   = true
-    volume_size = 100
-  }
   
+  vpc_security_group_ids = [aws_security_group.control_plane.id]
+  
+  root_block_device {
+    volume_size = 100
+    encrypted   = true
+  }
+
   iam_instance_profile = aws_iam_instance_profile.openshift_profile.name
-  key_name             = var.key_name != null ? var.key_name : null
+  key_name             = var.key_name
+
+  tags = merge(local.common_tags, {
+    Name = "${var.cluster_name}-control-plane-${count.index + 1}"
+    Role = "control-plane"
+  })
 }
 
-resource "aws_instance" "worker_node" {
+resource "aws_instance" "worker" {
   count         = var.worker_node_count
   ami           = var.ami
   instance_type = var.instance_type
   subnet_id     = var.subnet_id
-  security_groups = [var.security_group_id]
+  
+  vpc_security_group_ids = [aws_security_group.worker.id]
+  
+  root_block_device {
+    volume_size = 100
+    encrypted   = true
+  }
+
+  iam_instance_profile = aws_iam_instance_profile.openshift_profile.name
+  key_name             = var.key_name
+
   tags = merge(local.common_tags, {
-    Name = "openshift-worker-node-${count.index}"
+    Name = "${var.cluster_name}-worker-${count.index + 1}"
+    Role = "worker"
   })
 }
 
@@ -72,5 +89,5 @@ output "control_plane_ips" {
 }
 
 output "worker_node_ips" {
-  value = aws_instance.worker_node[*].public_ip
+  value = aws_instance.worker[*].public_ip
 } 

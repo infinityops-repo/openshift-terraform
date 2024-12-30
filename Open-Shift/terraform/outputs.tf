@@ -10,8 +10,12 @@ output "worker_node_ips" {
   value = module.ec2.worker_node_ips
 }
 
-output "allow_http_https" {
-  value = module.security_groups.allow_http_https
+output "control_plane_sg_id" {
+  value = module.ec2.control_plane_sg_id
+}
+
+output "worker_sg_id" {
+  value = module.ec2.worker_sg_id
 }
 
 output "cluster_endpoint" {
@@ -24,8 +28,4 @@ output "private_subnets" {
 
 output "public_subnets" {
   value = module.vpc.public_subnet_ids
-}
-
-output "cluster_security_group_id" {
-  value = module.security_groups.openshift_sg_id
 } 
